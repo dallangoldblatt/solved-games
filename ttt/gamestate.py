@@ -14,6 +14,8 @@ class GameState():
         self.board = board.copy()
         self.last_move = last_move
 
+        self.EMPTY = -1
+
         # Skip first move:
         if last_move == -1:
             self.ended = False
@@ -38,48 +40,57 @@ class GameState():
 
         # Check if last move ended the game
         self.win = any([all(self.board[index] == self.player for index in line) for line in winning_lines[self.last_move]])
-        self.tie = not self.win and all([space != -1 for space in self.board])
+        self.tie = not self.win and all([space != self.EMPTY for space in self.board])
         self.ended = self.win or self.tie
 
-    def get_max_move(self):
-        # Max seeks to maximize move utility
-        best_move, best_value = -1, -2
-        for index, space in enumerate(self.board):
-            if space != -1:
-                continue
-            next_state = GameState(False, self.board, index)
-            next_value = next_state.get_utility()
-            if next_value > best_value:
-                best_move = index
-                best_value = next_value
-        return (best_move, best_value)
+    def get_best_move(self):
+        # Get the best move for the current player
+        return self._get_best_move(self, -2, 2)[0]
 
-    def get_min_move(self):
-        # Min seeks to minimize move utility
-        best_move, best_value = -1, 2
-        for index, space in enumerate(self.board):
-            if space != -1:
-                continue
-            next_state = GameState(True, self.board, index)
-            next_value = next_state.get_utility()
-            if next_value < best_value:
-                best_move = index
-                best_value = next_value
-        return (best_move, best_value)
-
-    def get_utility(self):
-        if not self.ended:
-            # Consider all possible next gamestates
-            if self.player:
-                return self.get_max_move()[1]
+    def _get_best_move(self, state, alpha, beta):
+        # Recursive function for finding the best move in a state
+        # Implements alpha-beta pruning
+        if state.ended:
+            # Terminal states are assigned a fixed-value
+            if self.tie:
+                # Neither player wins
+                return (state.last_move, 0)
+            elif not state.player:
+                # AI wins
+                return (state.last_move, 1)
             else:
-                return self.get_min_move()[1]
-        elif self.tie:
-            # Neither player wins
-            return 0
-        elif not self.player:
-            # AI wins
-            return 1
+                # Player wins
+                return (state.last_move, -1)
+        # Non-terminal states need to enumerate child states
+        if state.player:
+            best_move, best_value = -1, -2
+            for index, space in enumerate(state.board):
+                # Skip used spaces
+                if space != self.EMPTY:
+                    continue
+                # Update with value of next state
+                next_state = GameState(not state.player, state.board, index)
+                next_value = next_state._get_best_move(next_state, alpha, beta)[1]
+                if next_value > best_value:
+                    best_move, best_value = index, next_value
+                    alpha = max(alpha, best_value)
+                    if alpha >= beta:
+                        # Prune
+                        break
+            return (best_move, best_value)
         else:
-            # Player wins
-            return -1
+            best_move, best_value = -1, 2
+            for index, space in enumerate(state.board):
+                # Skip used spaces
+                if space != self.EMPTY:
+                    continue
+                # Update with value of next state
+                next_state = GameState(not state.player, state.board, index)
+                next_value = next_state._get_best_move(next_state, alpha, beta)[1]
+                if next_value < best_value:
+                    best_move, best_value = index, next_value
+                    beta = min(beta, best_value)
+                    if beta <= alpha:
+                        # Prune
+                        break
+            return (best_move, best_value)

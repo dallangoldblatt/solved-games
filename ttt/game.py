@@ -45,7 +45,7 @@ class Game():
 
         # Find best move for AI in this state
         this_state = GameState(self.PLAYER, self.board, -1)
-        ai_move = this_state.get_max_move()[0]
+        ai_move = this_state.get_best_move()
 
         # Set AI move
         self.board[ai_move] = self.AI
