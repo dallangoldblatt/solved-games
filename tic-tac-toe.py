@@ -3,9 +3,9 @@ import random
 import time
 from ttt.game import Game
 
-def main():
-    # Decide who goes first
+def coin_flip():
     print('Who goes first?')
+    # Make sure the player makes a valid guess
     while True:
         guess = input('Heads (H) or Tails (T): ').lower()
         if guess in ['heads', 'head', 'h', 'tails', 'tail', 't']:
@@ -18,16 +18,21 @@ def main():
     states = ['_', '  \\', '    |', '     /', '      _', '      \\', '      |', '      /']
     print('Flipping...')
     for s in states:
-        time.sleep(0.25)
+        time.sleep(0.15)
         print('\t   ', s)
     if flip == 'h':
         print('\t      Heads!')
     else:
         print('\t      Tails!')
+    time.sleep(0.5)
     print()
 
     # Player goes first if guess is correct
-    player_turn = guess == flip
+    return guess == flip
+
+def main():
+    # Decide who goes first
+    player_turn = coin_flip()
     if player_turn:
         print('You are X')
     else:
@@ -48,18 +53,13 @@ def main():
                 print('You cannot choose a non-empty space')
             except ValueError:
                 print('Invalid input.')
+        # Update game with chosen move
         game.player_turn(move)
 
     # Print game results
-    print()
-    # TODO fix game.tie
-    if game.tie:
-        print('Tie game')
-    elif game.player_win:
-        print('You win!')
-    else:
-        print('You lose')
-    game.print_board()
+    print('\n--------------------------\n')
+    print(game.result)
+    game.print_board(print_indices=False)
 
 if __name__ == '__main__':
     main()
