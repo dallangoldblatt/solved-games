@@ -36,15 +36,29 @@ def main():
     # Create new Game
     game = Game(player_turn)
 
+    # Keep playing while game has not ended
     while not game.ended:
-        print()
-        print('-----------------------------------')
         game.print_board()
-        move = int(input('Play a space: '))
+        # Make sure the player inputs a valid move:
+        while True:
+            try:
+                move = int(input('Your turn! Play a space: '))
+                if game.board[move] == -1:
+                    break
+                print('You cannot choose a non-empty space')
+            except ValueError:
+                print('Invalid input.')
         game.player_turn(move)
 
+    # Print game results
     print()
-    print('Game over')
+    # TODO fix game.tie
+    if game.tie:
+        print('Tie game')
+    elif game.player_win:
+        print('You win!')
+    else:
+        print('You lose')
     game.print_board()
 
 if __name__ == '__main__':
