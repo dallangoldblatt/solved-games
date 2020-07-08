@@ -57,11 +57,13 @@ def main():
         while True:
             try:
                 move = int(input('Your turn! Play a space: '))
+                if move < 0 or move >= len(game.board):
+                    raise ValueError
                 if game.board[move] == -1:
                     break
-                print('You cannot choose a non-empty space')
+                print('You cannot choose a non-empty space.')
             except ValueError:
-                print('Invalid input.')
+                print('Invalid index.')
         # Update game with chosen move
         game.player_turn(move)
 
