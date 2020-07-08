@@ -28,7 +28,7 @@ class Game():
         self.board[move] = self.PLAYER
 
         # Check if the game has ended
-        next_state = GameState(self.PLAYER, self.board, move)
+        next_state = GameState(self.PLAYER, self.board, self.board_size, move)
         if not next_state.ended:
             self.ai_turn()
         elif next_state.tie:
@@ -44,14 +44,14 @@ class Game():
         print('My turn! Thinking...')
 
         # Find best move for AI in this state
-        this_state = GameState(self.PLAYER, self.board, -1)
+        this_state = GameState(self.PLAYER, self.board, self.board_size, -1)
         ai_move = this_state.get_best_move()
 
         # Set AI move
         self.board[ai_move] = self.AI
 
         # Check if the game has ended
-        next_state = GameState(self.AI, self.board, ai_move)
+        next_state = GameState(self.AI, self.board, self.board_size, ai_move)
         if next_state.tie:
             self.ended = True
             self.result = 'Tie game'

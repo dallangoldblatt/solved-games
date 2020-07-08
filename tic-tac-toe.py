@@ -1,5 +1,5 @@
-
 import random
+import sys
 import time
 from ttt.game import Game
 
@@ -31,6 +31,15 @@ def coin_flip():
     return guess == flip
 
 def main():
+    try:
+        # Check args for dimension argument
+        board_size = int(sys.argv[sys.argv.index('-d') + 1])
+    except:
+        if len(sys.argv) > 1:
+            print(f'USAGE: {sys.argv[0]} [-d <board size>]')
+            sys.exit(0)
+        board_size = 3
+
     # Decide who goes first
     player_turn = coin_flip()
     if player_turn:
@@ -39,7 +48,7 @@ def main():
         print('You are O')
 
     # Create new Game
-    game = Game(player_turn)
+    game = Game(player_turn, board_size)
 
     # Keep playing while game has not ended
     while not game.ended:

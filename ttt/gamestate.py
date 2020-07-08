@@ -1,17 +1,16 @@
 class GameState():
     """
-    The game board is a list with 9 indices:
-
-    0 | 1 | 2 => [0, 1, 2, 3, 4, 5, 6, 7, 8]
-    ---------
-    3 | 4 | 5
-    ---------
-    6 | 7 | 8
+    Represntation of a specific board state.
+    player: the player that played last_move
+    board: the current board state
+    board_size: the number of spaces per row (and col)
+    last_move: the index of the last move made by player
     """
 
-    def __init__(self, player, board, last_move):
+    def __init__(self, player, board, board_size, last_move):
         self.player = player
         self.board = board.copy()
+        self.board_size = board_size
         self.last_move = last_move
 
         self.EMPTY = -1
@@ -24,22 +23,22 @@ class GameState():
         # Apply move
         self.board[last_move] = self.player
 
-        # Matches a move to the possible lines that it could complete
-        winning_lines = \
-        {
-            0: [[0, 1, 2], [0, 4, 8], [0, 3, 6]],
-            1: [[0, 1, 2], [1, 4, 7]],
-            2: [[0, 1, 2], [2, 4, 6], [2, 5, 8]],
-            3: [[0, 3, 6], [3, 4, 5]],
-            4: [[0, 4, 8], [1, 4, 7], [2, 4, 6], [3, 4, 5]],
-            5: [[2, 5, 8], [3, 4, 5]],
-            6: [[0, 3, 6], [2, 4, 6], [6, 7, 8]],
-            7: [[1, 4, 7], [6, 7, 8]],
-            8: [[0, 4, 8] ,[2, 5, 8], [6, 7, 8]]
-        }
+        # Enumerate the indices of the possible winning lines
+        row, col = divmod(last_move, board_size)
+        winning_lines = []
+        # Add rows
+        winning_lines.append(list(range(board_size * row, board_size * (row + 1))))
+        # Add cols
+        winning_lines.append(list(range(col, col + board_size ** 2, board_size)))
+        # Add top left to bottom right diagonal
+        if row == col:
+            winning_lines.append(list(range(0, board_size ** 2, board_size + 1)))
+        # Add top right to bottom left diagonal
+        if row + col == board_size - 1:
+            winning_lines.append(list(range(board_size - 1, board_size ** 2 - 1, board_size - 1)))
 
         # Check if last move ended the game
-        self.win = any([all(self.board[index] == self.player for index in line) for line in winning_lines[self.last_move]])
+        self.win = any([all(self.board[index] == self.player for index in line) for line in winning_lines])
         self.tie = not self.win and all([space != self.EMPTY for space in self.board])
         self.ended = self.win or self.tie
 
@@ -69,7 +68,7 @@ class GameState():
                 if space != self.EMPTY:
                     continue
                 # Update with value of next state
-                next_state = GameState(not state.player, state.board, index)
+                next_state = GameState(not state.player, state.board, self.board_size, index)
                 next_value = next_state._get_best_move(next_state, alpha, beta)[1]
                 if next_value > best_value:
                     best_move, best_value = index, next_value
@@ -85,7 +84,7 @@ class GameState():
                 if space != self.EMPTY:
                     continue
                 # Update with value of next state
-                next_state = GameState(not state.player, state.board, index)
+                next_state = GameState(not state.player, state.board, self.board_size, index)
                 next_value = next_state._get_best_move(next_state, alpha, beta)[1]
                 if next_value < best_value:
                     best_move, best_value = index, next_value
