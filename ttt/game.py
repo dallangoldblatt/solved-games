@@ -9,6 +9,9 @@ class Game():
         self.ended = False
         self.result = ''
 
+        # Create dictionary for remembering value of particular board states
+        self.board_values = {}
+
         # Create vars for the player and AI markers
         self.PLAYER, self.AI = True, False
 
@@ -28,7 +31,7 @@ class Game():
         self.board[move] = self.PLAYER
 
         # Check if the game has ended
-        next_state = GameState(self.PLAYER, self.board, self.board_size, move)
+        next_state = GameState(self.PLAYER, self.board, self.board_size, self.board_values, move)
         if not next_state.ended:
             self.ai_turn()
         elif next_state.tie:
@@ -44,14 +47,14 @@ class Game():
         print('My turn! Thinking...')
 
         # Find best move for AI in this state
-        this_state = GameState(self.PLAYER, self.board, self.board_size, -1)
+        this_state = GameState(self.PLAYER, self.board, self.board_size, self.board_values, -1)
         ai_move = this_state.get_best_move()
 
         # Set AI move
         self.board[ai_move] = self.AI
 
         # Check if the game has ended
-        next_state = GameState(self.AI, self.board, self.board_size, ai_move)
+        next_state = GameState(self.AI, self.board, self.board_size, self.board_values, ai_move)
         if next_state.tie:
             self.ended = True
             self.result = 'Tie game'
@@ -82,7 +85,10 @@ class Game():
 
         # Join inner lists to create each line
         token_lines = [' | '.join(tokens) for tokens in token_lines]
-        index_lines = [' | '.join(map(str, indices)) for indices in index_lines]
+        if self.board_size == 3:
+            index_lines = [' | '.join(map(str, indices)) for indices in index_lines]
+        else:
+            index_lines = [' | '.join(map(lambda x: str(x).rjust(2), indices)) for indices in index_lines]
 
         # Create horizontal line to go between lines
         horiz_line = '-' * (3 * (self.board_size - 1) + self.board_size)
@@ -90,9 +96,12 @@ class Game():
         # Print board and indices together
         if print_indices:
             for i in range(self.board_size - 1):
-                print(' ' + token_lines[i] + '\t' + index_lines[i])
-                print(' ' + horiz_line + '\t' + horiz_line)
-            print(' ' + token_lines[-1] + '\t' + index_lines[-1])
+                print(' ' + token_lines[i] + '    ' + index_lines[i])
+                if self.board_size == 3:
+                    print(' ' + horiz_line + '    ' + horiz_line)
+                else:
+                    print(' ' + horiz_line + '    ' + horiz_line + '----')
+            print(' ' + token_lines[-1] + '    ' + index_lines[-1])
             print()
         else:
             for i in range(self.board_size - 1):

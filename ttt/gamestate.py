@@ -7,10 +7,11 @@ class GameState():
     last_move: the index of the last move made by player
     """
 
-    def __init__(self, player, board, board_size, last_move):
+    def __init__(self, player, board, board_size, board_values, last_move):
         self.player = player
         self.board = board.copy()
         self.board_size = board_size
+        self.board_values = board_values
         self.last_move = last_move
 
         self.EMPTY = -1
@@ -67,9 +68,16 @@ class GameState():
                 # Skip used spaces
                 if space != self.EMPTY:
                     continue
-                # Update with value of next state
-                next_state = GameState(not state.player, state.board, self.board_size, index)
-                next_value = next_state._get_best_move(next_state, alpha, beta)[1]
+                next_state = GameState(not state.player, state.board, self.board_size, self.board_values, index)
+                try:
+                    # Check if next state's value already has been calculated
+                    key = tuple(next_state.board)
+                    next_value = self.board_values[key]
+                except KeyError:
+                    # If not, save for future since tree traversal has overlapping nodes
+                    next_value = next_state._get_best_move(next_state, alpha, beta)[1]
+                    self.board_values[key] = next_value
+                # Update best
                 if next_value > best_value:
                     best_move, best_value = index, next_value
                     alpha = max(alpha, best_value)
@@ -83,9 +91,16 @@ class GameState():
                 # Skip used spaces
                 if space != self.EMPTY:
                     continue
-                # Update with value of next state
-                next_state = GameState(not state.player, state.board, self.board_size, index)
-                next_value = next_state._get_best_move(next_state, alpha, beta)[1]
+                next_state = GameState(not state.player, state.board, self.board_size, self.board_values, index)
+                try:
+                    # Check if next state's value already has been calculated
+                    key = tuple(next_state.board)
+                    next_value = self.board_values[key]
+                except KeyError:
+                    # If not, save for future since tree traversal has overlapping nodes
+                    next_value = next_state._get_best_move(next_state, alpha, beta)[1]
+                    self.board_values[key] = next_value
+                # Update best
                 if next_value < best_value:
                     best_move, best_value = index, next_value
                     beta = min(beta, best_value)
