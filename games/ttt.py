@@ -1,5 +1,6 @@
 
-from typing import Any, Dict, List
+import random
+from typing import Any, Dict, Generator, List
 
 from games import Game, GameState
 
@@ -13,7 +14,9 @@ class TTTGameState(GameState):
     last_move: the index of the last move made by player
     """
 
-    def __init__(self, player: int, board: Any, board_values: Dict[Any, float],
+    max_depth = None
+
+    def __init__(self, player: int, board: Any, board_values: Dict[int, float],
                  last_move: int, kwargs: Dict[str, Any] = None):
         super().__init__(player, board, board_values, last_move, kwargs=kwargs)
         if last_move == -1:
@@ -36,10 +39,17 @@ class TTTGameState(GameState):
             winning_lines.append(list(range(board_size - 1, board_size ** 2 - 1, board_size - 1)))
 
         # Check if last move ended the game
-        self.win = any([all(self.board[index] == self.player for index in line) for line in winning_lines])
-        self.tie = not self.win and all([space != GameState.EMPTY for space in self.board])
+        self.win = any(all(self.board[index] == self.player for index in line) for line in winning_lines)
+        self.tie = not self.win and all(space != GameState.EMPTY for space in self.board)
         self.ended = self.win or self.tie
 
+    def gen_indices(self) -> Generator[int, None, None]:
+        """Generator of valid move indices for AI.
+        """
+        n = len(self.board)
+        for index in random.sample(range(n), n):
+            if self.board[index] == GameState.EMPTY:
+                yield index
 
 class TTTGame(Game):
     # Player markers
@@ -48,38 +58,34 @@ class TTTGame(Game):
 
     gamestate_cls = TTTGameState
 
-    def __init__(self, player_first: bool, board_size: int = 3):
+    def __init__(self, player_first: bool, board_size: int = 3, **kwargs):
         self.board = [GameState.EMPTY] * (board_size ** 2)
         self.board_size = board_size
+        self.gamestate_cls.max_depth = max_depth
 
         self.kwargs = {'board_size': board_size}
         super().__init__(player_first)
 
-    def player_turn(self, move):
-        self.take_turn(move, False)
+    def move_is_valid(self, move: int) -> bool:
+        """Check that move choice is valid.
+        """
+        return 1 <= move <= 9
 
-    def ai_turn(self):
-        # Update player about board state
-        self.print_board()
-        print('My turn! Thinking...')
-
-        # Find best move for AI in this state
-        this_state = TTTGameState(GameState.PLAYER, self.board, self.board_values, -1, self.kwargs)
-        ai_move = this_state.get_best_move()
-
-        self.take_turn(ai_move, True)
+    def move_to_index(self, move: int) -> int:
+        """Convert move choice to index in self.board
+        """
+        return move - 1
 
     def print_board(self, print_indices=True):
         """ Print the game board. For a 3x3 game the output should be:
 
-           | X |  	  0 | 1 | 2
+           | X |  	  1 | 2 | 3
          ---------	  ---------
-           | O |  	  3 | 4 | 5
+           | O |  	  4 | 5 | 6
          ---------	  ---------
-         X |   |  	  6 | 7 | 8
+         X |   |  	  7 | 8 | 9
 
         """
-        print()
         board_size = self.board_size
 
         # Get the text that will be in each space
@@ -94,14 +100,15 @@ class TTTGame(Game):
         # Join inner lists to create each line
         token_lines = [' | '.join(tokens) for tokens in token_lines]
         if board_size == 3:
-            index_lines = [' | '.join(map(str, indices)) for indices in index_lines]
+            index_lines = [' | '.join(map(lambda x: str(x+1), indices)) for indices in index_lines]
         else:
-            index_lines = [' | '.join(map(lambda x: str(x).rjust(2), indices)) for indices in index_lines]
+            index_lines = [' | '.join(map(lambda x: str(x+1).rjust(2), indices)) for indices in index_lines]
 
         # Create horizontal line to go between lines
         horiz_line = '-' * (3 * (board_size - 1) + board_size)
 
         # Print board and indices together
+        print()
         if print_indices:
             for i in range(board_size - 1):
                 print(' ' + token_lines[i] + '    ' + index_lines[i])

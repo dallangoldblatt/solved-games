@@ -18,6 +18,9 @@ def coin_flip():
         guess = input('Heads (H) or Tails (T): ').lower()
         if guess in ['heads', 'head', 'h', 'tails', 'tail', 't']:
             break
+        elif guess == '!':
+            # Always-win override
+            return True
         print('Invalid input.')
     guess = guess[0]
     flip = random.choice(['h' ,'t'])
@@ -39,9 +42,9 @@ def coin_flip():
     return guess == flip
 
 def usage():
-    print(f'Usage: python3 {sys.argv[0]} <game> [-d <board size>]')
-    print('    Tic-Tac-Toe: \'ttt\'. Default options: -d 3')
-    print('    Connect 4: \'c4\'. No options')
+    print(f'Usage: python3 {sys.argv[0]} <game> [-m <max depth>] [-d <board size>]')
+    print('    Tic-Tac-Toe: \'ttt\'. Default options: -m 5 -d 3')
+    print('    Connect 4: \'c4\'. Default optionss: -m 5')
 
 def main():
     # Check args for game argument
@@ -51,15 +54,9 @@ def main():
         usage()
         sys.exit(0)
 
-    try:
-        # Check args for dim argument
-        board_size = int(sys.argv[sys.argv.index('-d') + 1])
-    except:
-        if len(sys.argv) > 2:
-            print(f'Unrecognized options: {" ".join(sys.argv[1:])}')
-            usage()
-            sys.exit(0)
-        board_size = 3
+    # Get optional values
+    max_depth = int(sys.argv[sys.argv.index('-m') + 1]) if '-m' in sys.argv else 5
+    board_size = int(sys.argv[sys.argv.index('-d') + 1]) if '-d' in sys.argv else 3
 
     # Decide who goes first
     player_turn = coin_flip()
@@ -69,7 +66,7 @@ def main():
         print(f'You are {game_cls[game].SECOND}')
 
     # Create new Game
-    game = game_cls[game](player_turn, board_size)
+    game = game_cls[game](player_turn, max_depth=max_depth, board_size=board_size)
 
     # Keep playing while game has not ended
     while not game.ended:
@@ -81,10 +78,11 @@ def main():
                 # Exit game
                 sys.exit(0)
             move = int(move_str)
-            if move < 0 or move >= len(game.board):
+            if not game.move_is_valid(move):
                 # Illegal move
                 raise ValueError
-            elif game.board[move] == GameState.EMPTY:
+            move = game.move_to_index(move)
+            if game.board[move] == GameState.EMPTY:
                 # Update game with chosen move
                 game.player_turn(move)
             else:
