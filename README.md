@@ -1,5 +1,3 @@
-# solved-games
-
 Conisder yourself a Tic-Tac-Toe or Connect 4 expert? See if you can beat this bot! 
 
 The algorithm simulates all future board states and chooses the move that maximizes its score, assuming that you play optimally. If the simulation takes too long to reach a terminal state, a game-specific heuristic is used to score the non-terminal state's value. See [Minimax](https://en.wikipedia.org/wiki/Minimax) and [Alpha-beta pruning](https://en.wikipedia.org/wiki/Alpha%E2%80%93beta_pruning) for a detailed explanation of how it works.
